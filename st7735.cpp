@@ -1,5 +1,3 @@
-/* vim: set ai et ts=4 sw=4: */
-/* vim: set ai et ts=4 sw=4: */
 #include "st7735.h"
 #include "stm32f103x6.h"
 
