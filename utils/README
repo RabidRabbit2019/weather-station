@@ -1,0 +1,1 @@
+g++ zic_utils.cpp tga_2_src.cpp -O2 -s -Wall -Wextra -o tga_2_src
