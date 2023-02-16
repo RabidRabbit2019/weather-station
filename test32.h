@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+#define test32_font_MAX_SYMBOL_WIDTH 33
+
 extern const packed_font_desc_s test32_font;
 
 #ifdef __cplusplus

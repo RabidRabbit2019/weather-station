@@ -218,8 +218,8 @@ static void ST7735_WriteChar(uint16_t x, uint16_t y, display_char_s * a_data) {
   bool v_last_row = false;
   uint32_t bytes_to_write = a_data->m_cols_count * sizeof(uint16_t);
 
-  uint16_t line_buf1[36]; // max font width
-  uint16_t line_buf2[36]; // max font width
+  uint16_t line_buf1[test32_font_MAX_SYMBOL_WIDTH]; // max font width
+  uint16_t line_buf2[test32_font_MAX_SYMBOL_WIDTH]; // max font width
   
   ST7735_SetAddressWindow(x, y, x+a_data->m_symbol->m_x_advance-1, y+a_data->m_font->m_row_height-1);
   GPIOB->BSRR = GPIO_BSRR_BS14;

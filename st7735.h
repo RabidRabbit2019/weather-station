@@ -1,7 +1,7 @@
 #ifndef __ST7735_H__
 #define __ST7735_H__
 
-#include "font_bmp.h"
+#include "test32.h"
 #include "utils/zic_utils.h"
 
 #define ST7735_MADCTL_MY  0x80
