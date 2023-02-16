@@ -169,9 +169,9 @@ bool BMP280_init() {
              ;
   // I2C1 setup
   I2C1->CR1 = 0;
-  I2C1->CR2 = (24 << I2C_CR2_FREQ_Pos); // 36 MHz APB1 clock
-  I2C1->CCR = 120; // Sm mode, 5E-6 * 24E6
-  I2C1->TRISE = 25; // (1000 / (1000/24) ) + 1
+  I2C1->CR2 = (36 << I2C_CR2_FREQ_Pos); // 36 MHz APB1 clock
+  I2C1->CCR = 180; // Sm mode, 5E-6 * 36E6
+  I2C1->TRISE = 37; // (1000 / (1000/36) ) + 1
   I2C1->CR1 = I2C_CR1_PE;
   // if BUSY flag is set, try to reset and wait
   if ( 0 != (I2C1->SR2 & I2C_SR2_BUSY) ) {

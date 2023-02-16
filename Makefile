@@ -1,7 +1,7 @@
 .PHONY: clean
 
 release:
-	arm-none-eabi-g++ -c -Wall -Wextra -O2 -flto -s \
+	arm-none-eabi-g++ -c -Wall -Wextra -Os -flto -s \
 	  main.cpp \
 	  trace.c \
 	  stdio.c \
@@ -12,9 +12,9 @@ release:
 	  pressure_meter.cpp \
 	  humidity.cpp \
 	  flag.cpp \
-	  weather_font.c \
-    utils/zic_utils.cpp \
+	  test32.c \
     font_bmp.c \
+    utils/zic_utils.cpp \
 	  -ffunction-sections -fdata-sections -mcpu=cortex-m3 -mthumb -lnosys \
 	  -nostartfiles -ffreestanding -specs=nosys.specs -fno-rtti -fno-exceptions
 	arm-none-eabi-g++ -c -Wall -Wextra -Os -s \
@@ -28,14 +28,14 @@ release:
 	  stdio.o \
 	  bme280_hwi2c.o \
 	  st7735.o \
-	  weather_font.o \
 	  temp_plus.o \
 	  temp_minus.o \
 	  pressure_meter.o \
 	  humidity.o \
 	  flag.o \
     zic_utils.o \
-    font_bmp.c \
+	  test32.o \
+    font_bmp.o \
 	  -Wl,-gc-sections -mcpu=cortex-m3 -mthumb -lnosys -nostartfiles -ffreestanding \
 	  -specs=nosys.specs -TSTM32F103C8Tx_FLASH.ld -o a.elf
 
@@ -46,15 +46,15 @@ debug:
 	  trace.c \
 	  stdio.c \
 	  bme280_hwi2c.cpp \
-	  radiomodem.cpp \
 	  st7735.cpp \
-	  fonts.c \
 	  temp_plus.cpp \
 	  temp_minus.cpp \
 	  pressure_meter.cpp \
 	  humidity.cpp \
 	  flag.cpp \
     utils/zic_utils.cpp \
+	  test32.c \
+    font_bmp.c \
 	  -ffunction-sections -fdata-sections -mcpu=cortex-m3 -mthumb -lnosys -nostartfiles \
 	  -ffreestanding -specs=nosys.specs -fno-rtti -fno-exceptions
 	arm-none-eabi-g++ \
@@ -63,15 +63,15 @@ debug:
 	  trace.o \
 	  stdio.o \
 	  bme280_hwi2c.o \
-	  radiomodem.o \
 	  st7735.o \
-	  fonts.o \
 	  temp_plus.o \
 	  temp_minus.o \
 	  pressure_meter.o \
 	  humidity.o \
 	  flag.o \
     zic_utils.o \
+	  test32.o \
+    font_bmp.o \
 	  -Wl,-gc-sections -mcpu=cortex-m3 -mthumb -lnosys -nostartfiles -ffreestanding \
 	  -specs=nosys.specs -TSTM32F103C8Tx_FLASH.ld -o a.elf
 

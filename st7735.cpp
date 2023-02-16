@@ -218,8 +218,8 @@ static void ST7735_WriteChar(uint16_t x, uint16_t y, display_char_s * a_data) {
   bool v_last_row = false;
   uint32_t bytes_to_write = a_data->m_cols_count * sizeof(uint16_t);
 
-  uint16_t line_buf1[32]; // max font width
-  uint16_t line_buf2[32]; // max font width
+  uint16_t line_buf1[36]; // max font width
+  uint16_t line_buf2[36]; // max font width
   
   ST7735_SetAddressWindow(x, y, x+a_data->m_symbol->m_x_advance-1, y+a_data->m_font->m_row_height-1);
   GPIOB->BSRR = GPIO_BSRR_BS14;
@@ -255,32 +255,25 @@ void ST7735_WriteString(uint16_t x, uint16_t y, const char* str, const packed_fo
 
     ST7735_Select();
 
-    while(*str) {
+    for ( uint32_t c = get_next_utf8_code( &str ); 0 != c; c = get_next_utf8_code( &str ) ) {
         if ( !v_used ) {
           v_used = true;
-          display_char_init( &v_ds, *str, &fnt, 0, bgcolor, color );
+          display_char_init( &v_ds, c, &fnt, 0, bgcolor, color );
         } else {
-          display_char_init2( &v_ds, *str );
+          display_char_init2( &v_ds, c );
         }
         
-        if(x + v_ds.m_symbol->m_x_advance >= ST7735_WIDTH) {
+        if ( (x + v_ds.m_symbol->m_x_advance) >= ST7735_WIDTH ) {
             x = 0;
             y += v_ds.m_font->m_row_height;
             
-            if(y + v_ds.m_font->m_row_height >= ST7735_HEIGHT) {
+            if ( (y + v_ds.m_font->m_row_height) >= ST7735_HEIGHT ) {
                 break;
-            }
-
-            if(*str == ' ') {
-                // skip spaces in the beginning of the new line
-                str++;
-                continue;
             }
         }
 
         ST7735_WriteChar(x, y, &v_ds);
         x += v_ds.m_symbol->m_x_advance;
-        str++;
     }
 
     ST7735_Unselect();
