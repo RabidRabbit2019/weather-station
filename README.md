@@ -18,7 +18,7 @@ make
 2. https://github.com/RabidRabbit2019/smooth-bitmap-fonts for display smooth symbols
 
 ## example
-![Link https://lira39.tk/weather_station_screen.png](https://lira39.tk/weather_station_screen.png "a example screen")
+https://lira39.tk/weather_station_screen.png - link to example screen
 
 ## notes
 existing openocd.cfg for blue pill board based on CKS32F103C8T6 ucontroller (clone of STM32F103C8T6)
