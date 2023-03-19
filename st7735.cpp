@@ -252,13 +252,14 @@ static void ST7735_WriteChar(uint16_t x, uint16_t y, display_char_s * a_data) {
 void ST7735_WriteString(uint16_t x, uint16_t y, const char* str, const packed_font_desc_s & fnt, uint16_t color, uint16_t bgcolor) {
     bool v_used = false;
     display_char_s v_ds;
+    uint16_t v_colors[8];
 
     ST7735_Select();
 
     for ( uint32_t c = get_next_utf8_code( &str ); 0 != c; c = get_next_utf8_code( &str ) ) {
         if ( !v_used ) {
           v_used = true;
-          display_char_init( &v_ds, c, &fnt, 0, bgcolor, color );
+          display_char_init( &v_ds, c, &fnt, 0, bgcolor, color, v_colors );
         } else {
           display_char_init2( &v_ds, c );
         }
@@ -275,6 +276,127 @@ void ST7735_WriteString(uint16_t x, uint16_t y, const char* str, const packed_fo
         ST7735_WriteChar(x, y, &v_ds);
         x += v_ds.m_symbol->m_x_advance;
     }
+
+    ST7735_Unselect();
+}
+
+#define MAX_ONE_STR_SYMBOLS 8
+
+
+bool prepare_char_line( uint16_t * a_buf, display_char_s * a_symbols, int a_symbols_count ) {
+  bool v_result = false;
+
+  // with all symbols  
+  for ( int i = 0; i < a_symbols_count; ++i ) {
+    // set dst buffer for output symbol's row
+    a_symbols->m_pixbuf = a_buf;
+    // put symbol's row into buffer
+    v_result = display_char_row( a_symbols ) || v_result;
+    // advance dst ptr for next symbol
+    a_buf += a_symbols->m_symbol->m_x_advance;
+    // to next stmbol
+    ++a_symbols;
+  }
+
+  return v_result;
+}
+
+// draw string a_str within rectangle(a_width, a_height) at a_x, a_y
+// string for 8 or less symbols, one line
+// flicker-free display - line by line for entire rectangle
+void ST7735_WriteStringWithBackground(
+              int a_x
+            , int a_y
+            , int a_width
+            , int a_height
+            , const char * a_str
+            , const packed_font_desc_s & a_fnt
+            , uint16_t a_color
+            , uint16_t a_bgcolor
+            ) {
+    // buffer for all display symbols
+    display_char_s v_ds[MAX_ONE_STR_SYMBOLS];
+    // display colors
+    uint16_t v_colors[8];
+    // display line buffers
+    uint16_t line_buf1[ST7735_MAX_LINE_PIXELS];
+    uint16_t line_buf2[ST7735_MAX_LINE_PIXELS];
+    // get text bounds
+    int v_str_width = 0;
+    int v_str_height = 0;
+    get_text_extent( &a_fnt, a_str, &v_str_width, &v_str_height );
+    // start column for first symbol
+    int v_start_str_column = (a_width - v_str_width) / 2;
+    if ( v_start_str_column < 0 ) {
+      v_start_str_column = 0;
+    }
+    // current column number
+    int v_symbol_column = v_start_str_column;
+
+    // prepare symbols
+    int v_symbols_count = 0;
+    // for each symbol in a_str
+    for ( uint32_t c = get_next_utf8_code( &a_str ); 0 != c && v_symbols_count < MAX_ONE_STR_SYMBOLS; c = get_next_utf8_code( &a_str ) ) {
+      // prepare display structure
+      // buffer ptr set to 0 (zero), as it use double buffering by line
+      if ( 0 == v_symbols_count ) {
+        display_char_init( &v_ds[v_symbols_count], c, &a_fnt, 0, a_bgcolor, a_color, v_colors );
+      } else {
+        // reuse font, and colors from prev symbol
+        display_char_init3( &v_ds[v_symbols_count], c, 0, &v_ds[v_symbols_count - 1] );
+      }
+      // check str width
+      if ( (v_symbol_column + v_ds[v_symbols_count].m_symbol->m_x_advance) >= a_width ) {
+        // string up to current symbol wider than display rectangle, skip it and other symbols
+        break;
+      }
+      // advance display offset
+      v_symbol_column += v_ds[v_symbols_count].m_symbol->m_x_advance;
+      // advance symbols counter
+      ++v_symbols_count;
+    }
+    // prepare paddings for line buffers
+    for ( int i = 0; i < v_start_str_column; ++i ) {
+      line_buf1[i] = v_colors[0];
+      line_buf2[i] = v_colors[0];
+    }
+    for ( int i = v_symbol_column; i < a_width; ++i ) {
+      line_buf1[i] = v_colors[0];
+      line_buf2[i] = v_colors[0];
+    }
+    
+    bool v_last_row = false;
+    uint32_t bytes_to_write = a_width * sizeof(uint16_t);
+    
+    ST7735_Select();
+
+    // display region as entire rectangle
+    ST7735_SetAddressWindow( a_x, a_y, a_x + a_width - 1, a_y + a_height - 1 );
+    GPIOB->BSRR = GPIO_BSRR_BS14;
+
+    // line by line double buffered display
+    uint16_t * start_line_buf1 = line_buf1 + v_start_str_column;
+    uint16_t * start_line_buf2 = line_buf2 + v_start_str_column;
+    
+    // write line 1
+    v_last_row = prepare_char_line( start_line_buf1, v_ds, v_symbols_count );
+    ST7735_spi_write_start( (uint8_t *)line_buf1, bytes_to_write );
+    //
+    while ( !v_last_row ) {
+      // write line 2
+      v_last_row = prepare_char_line( start_line_buf2, v_ds, v_symbols_count );
+      ST7735_spi_write_end();
+      ST7735_spi_write_start((uint8_t *)line_buf2, bytes_to_write);
+      if ( v_last_row ) {
+        break;
+      }
+      // write line 1
+      v_last_row = prepare_char_line( start_line_buf1, v_ds, v_symbols_count );
+      ST7735_spi_write_end();
+      ST7735_spi_write_start((uint8_t *)line_buf1, bytes_to_write);
+    }
+    // end wait
+    ST7735_spi_write_end();
 
     ST7735_Unselect();
 }

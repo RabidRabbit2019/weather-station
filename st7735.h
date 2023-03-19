@@ -109,6 +109,16 @@ void ST7735_FillScreenFast(uint16_t color);
 void ST7735_DrawImage(int x, int y, int w, int h, const uint8_t* a_data, int a_data_len);
 void ST7735_InvertColors(int invert); // 0 - false, != 0 - true
 void ST7735_SetGamma(GammaDef gamma);
+void ST7735_WriteStringWithBackground(
+              int a_x
+            , int a_y
+            , int a_width
+            , int a_height
+            , const char * a_str
+            , const packed_font_desc_s & a_fnt
+            , uint16_t a_color
+            , uint16_t a_bgcolor
+            );
 
 
 #endif // __ST7735_H__

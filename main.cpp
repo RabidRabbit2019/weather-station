@@ -238,29 +238,50 @@ void run() {
             ST7735_DrawImage( 6, 0, Itemp_plus_tga_width, Itemp_plus_tga_height, Itemp_plus_tga_zic, (int)sizeof(Itemp_plus_tga_zic) );
           }
           sprintf( v_line, "%c%d.%d", v_char_sign, v_t / 10, v_t % 10 );
-          get_text_extent( &test32_font, v_line, &v_width, &v_height );
-          v_x1 = 45 + ((115 - v_width) / 2);
-          ST7735_FillRectangleFast( 45, 6, 115, 32, ST7735_BLACK );
-          ST7735_WriteString( v_x1, 6, v_line, test32_font, '+' == v_char_sign ? ST7735_FOX : ST7735_LBLUE, ST7735_BLACK );
+          //
+          ST7735_WriteStringWithBackground(
+                    45
+                  , 6
+                  , 115
+                  , 32
+                  , v_line
+                  , test32_font
+                  , '+' == v_char_sign ? ST7735_FOX : ST7735_LBLUE
+                  , ST7735_BLACK
+                  );
         }
         // pressure
         if ( v_p_last != v_p ) {
           v_p_last = v_p;
           sprintf( v_line, "%d", v_p );
-          get_text_extent( &test32_font, v_line, &v_width, &v_height );
-          v_x1 = 45 + ((115 - v_width) / 2);
-          ST7735_FillRectangleFast( 45, 48, 115, 32, ST7735_BLACK );
-          ST7735_WriteString( v_x1, 48, v_line, test32_font, ST7735_LGRAY, ST7735_BLACK );
+          //
+          ST7735_WriteStringWithBackground(
+                    45
+                  , 48
+                  , 115
+                  , 32
+                  , v_line
+                  , test32_font
+                  , ST7735_LGRAY
+                  , ST7735_BLACK
+                  );
         }
         // humidity
         if ( BMP280_is_BME() ) {
           if ( v_h_last != v_h ) {
             v_h_last = v_h;
             sprintf( v_line, "%d%%", v_h );
-            get_text_extent( &test32_font, v_line, &v_width, &v_height );
-            v_x1 = 45 + ((115 - v_width) / 2);
-            ST7735_FillRectangleFast( 45, 90, 115, 32, ST7735_BLACK );
-            ST7735_WriteString( v_x1, 90, v_line, test32_font, ST7735_LEAF, ST7735_BLACK );
+            //
+            ST7735_WriteStringWithBackground(
+                      45
+                    , 90
+                    , 115
+                    , 32
+                    , v_line
+                    , test32_font
+                    , ST7735_LEAF
+                    , ST7735_BLACK
+                    );
           }
         }
       }
