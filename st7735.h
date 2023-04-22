@@ -22,7 +22,8 @@
 #define ST7735_HEIGHT 128
 #define ST7735_XSTART 0
 #define ST7735_YSTART 0
-#define ST7735_ROTATION (ST7735_MADCTL_MX | ST7735_MADCTL_MV)
+// Frame Data Write Direction According to the MADCTL parameters (MV, MX and MY), from ST7735 datasheet
+#define ST7735_ROTATION (ST7735_MADCTL_MV | ST7735_MADCTL_MY) // X-Y exchange (160 width, 128 height) and Y-mirror
 
 
 /****************************/
