@@ -93,11 +93,11 @@ uint8_t g_dummy = 0;
 static void ST7735_spi_write_start( uint8_t * a_src, uint32_t a_size ) {
   SPI1->DR;
   DMA1->IFCR = 0xFFFFFFFF;
-  
+  // enable DMA1 channel 2 for receive
   DMA1_Channel2->CMAR = (uint32_t)&g_dummy;
   DMA1_Channel2->CNDTR = a_size;
   DMA1_Channel2->CCR = DMA_CCR_EN;
-  
+  // enable DMA1 channel 3 for transmit
   DMA1_Channel3->CMAR = (uint32_t)a_src;
   DMA1_Channel3->CNDTR = a_size;
   DMA1_Channel3->CCR = DMA_CCR_DIR
@@ -109,17 +109,19 @@ static void ST7735_spi_write_start( uint8_t * a_src, uint32_t a_size ) {
 
 static void ST7735_spi_write_end() {
   uint32_t v_from = g_milliseconds;
+  // wait for receive complete (all data transferred) or error at any channel
   while ( ((uint32_t)(g_milliseconds - v_from)) < 50u ) {
     if ( 0 != (DMA1->ISR & (DMA_ISR_TEIF2 | DMA_ISR_TEIF3 | DMA_ISR_TCIF2)) ) {
       break;
     }
   }
-  
+  // disable used channels
   DMA1_Channel2->CCR &= ~DMA_CCR_EN;
   DMA1_Channel3->CCR &= ~DMA_CCR_EN;
 }
 
 
+// syncronized data write (return when transfer completed)
 static void ST7735_spi_write( uint8_t * a_src, uint32_t a_size ) {
   ST7735_spi_write_start( a_src, a_size );
   ST7735_spi_write_end();
@@ -166,6 +168,7 @@ static void ST7735_ExecuteCommandList(const uint8_t *addr) {
     }
 }
 
+
 static void ST7735_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1) {
     // column address set
     ST7735_WriteCommand(ST7735_CASET);
@@ -201,6 +204,7 @@ void ST7735_Init() {
   ST7735_Unselect();
 }
 
+
 void ST7735_DrawPixel(uint16_t x, uint16_t y, uint16_t color) {
     if((x >= ST7735_WIDTH) || (y >= ST7735_HEIGHT))
         return;
@@ -214,6 +218,15 @@ void ST7735_DrawPixel(uint16_t x, uint16_t y, uint16_t color) {
     ST7735_Unselect();
 }
 
+
+// draw char using double-buffer:
+// 1. prepare line N
+// 2. wait for SPI xfer ends for line N-1
+// 2. start write line N via SPI
+// 3. prepare line N+1
+// 4. wait for SPI xfer ends for line N
+// 5. start write line N+1 via SPI
+// 6. N+=2, goto 1
 static void ST7735_WriteChar(uint16_t x, uint16_t y, display_char_s * a_data) {
   bool v_last_row = false;
   uint32_t bytes_to_write = a_data->m_cols_count * sizeof(uint16_t);
@@ -303,7 +316,7 @@ bool prepare_char_line( uint16_t * a_buf, display_char_s * a_symbols, int a_symb
 
 // draw string a_str within rectangle(a_width, a_height) at a_x, a_y
 // string for 8 or less symbols, one line
-// flicker-free display - line by line for entire rectangle
+// flicker-free display - line by line for entire rectangle with double-buffer
 void ST7735_WriteStringWithBackground(
               int a_x
             , int a_y
